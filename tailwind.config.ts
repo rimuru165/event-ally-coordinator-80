@@ -57,6 +57,10 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
+        neon: {
+          blue: "#0EA5E9",
+          cyan: "#22D3EE",
+        },
       },
       borderRadius: {
         lg: "var(--radius)",
@@ -80,12 +84,17 @@ export default {
           from: { transform: "translateX(-100%)" },
           to: { transform: "translateX(0)" },
         },
+        glow: {
+          '0%, 100%': { boxShadow: '0 0 15px rgba(14, 165, 233, 0.5)' },
+          '50%': { boxShadow: '0 0 30px rgba(34, 211, 238, 0.7)' },
+        },
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         fadeIn: "fadeIn 0.5s ease-out",
         slideIn: "slideIn 0.3s ease-out",
+        glow: "glow 3s ease-in-out infinite",
       },
     },
   },

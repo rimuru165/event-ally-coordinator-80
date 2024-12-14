@@ -6,25 +6,34 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 222.2 84% 4.9%;
-    --card: 0 0% 100%;
-    --card-foreground: 222.2 84% 4.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
-    --primary: 222.2 47.4% 11.2%;
+    --background: 230 25% 12%;
+    --foreground: 210 40% 98%;
+    
+    --card: 230 25% 15%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 230 25% 15%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 199 89% 48%;
     --primary-foreground: 210 40% 98%;
-    --secondary: 210 40% 96.1%;
+    
+    --secondary: 191 97% 77%;
     --secondary-foreground: 222.2 47.4% 11.2%;
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 210 40% 96.1%;
+    
+    --muted: 230 25% 20%;
+    --muted-foreground: 215 20% 75%;
+    
+    --accent: 191 97% 77%;
     --accent-foreground: 222.2 47.4% 11.2%;
+    
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 84% 4.9%;
+    
+    --border: 230 25% 25%;
+    --input: 230 25% 25%;
+    --ring: 191 97% 77%;
+    
     --radius: 0.75rem;
   }
 
@@ -35,10 +44,28 @@
   body {
     @apply bg-background text-foreground font-sans antialiased;
     font-family: 'Inter', sans-serif;
+    background: linear-gradient(to bottom right, 
+      hsl(230, 25%, 12%),
+      hsl(230, 25%, 8%),
+      hsl(230, 25%, 10%)
+    );
+    min-height: 100vh;
+  }
+
+  .glass-card {
+    @apply bg-card/30 backdrop-blur-md border border-white/10 shadow-lg;
+  }
+
+  .neon-border {
+    @apply border border-neon-cyan/30 shadow-[0_0_15px_rgba(34,211,238,0.3)];
+  }
+
+  .neon-text {
+    @apply bg-gradient-to-r from-neon-blue to-neon-cyan bg-clip-text text-transparent;
   }
 
   .event-card {
-    @apply relative overflow-hidden rounded-xl p-6 transition-all duration-300 hover:shadow-lg;
+    @apply relative overflow-hidden rounded-xl p-6 transition-all duration-300 hover:shadow-lg glass-card;
   }
 
   .event-card::before {
@@ -68,5 +95,37 @@
 
   .slide-in {
     @apply animate-slideIn;
+  }
+
+  /* Form Styles */
+  input, select, textarea {
+    @apply bg-muted/50 border-input/50 text-foreground placeholder:text-muted-foreground;
+  }
+
+  /* Button Styles */
+  button {
+    @apply transition-all duration-300;
+  }
+
+  button:not(.glass-card):hover {
+    @apply animate-glow;
+  }
+
+  /* Card Styles */
+  .card {
+    @apply glass-card hover:neon-border transition-all duration-300;
+  }
+
+  /* Table Styles */
+  table {
+    @apply bg-card/30 backdrop-blur-sm;
+  }
+
+  th {
+    @apply bg-muted/30 text-foreground/90;
+  }
+
+  td {
+    @apply border-muted/30 text-foreground/80;
   }
 }
