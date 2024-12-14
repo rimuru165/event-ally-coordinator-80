@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -19,40 +19,30 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 
-// Mock data - replace with actual data from your backend
-const mockParticipants = [
-  {
-    id: 1,
-    name: "John Doe",
-    eventType: "sports",
-    school: "Sample School",
-    status: "approved",
-    qualification: "pending",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    eventType: "cultural",
-    school: "Another School",
-    status: "approved",
-    qualification: "pending",
-  },
-];
-
 const CoordinatorDashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [participants, setParticipants] = useState(mockParticipants);
+  const [participants, setParticipants] = useState([]);
   const [filter, setFilter] = useState("all");
 
-  const handleQualification = (participantId: number, isQualified: boolean) => {
-    setParticipants(
-      participants.map((p) =>
-        p.id === participantId
-          ? { ...p, qualification: isQualified ? "qualified" : "disqualified" }
-          : p
-      )
+  useEffect(() => {
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    const approvedRegistrations = registrations.filter((r: any) => r.status === 'approved');
+    setParticipants(approvedRegistrations);
+  }, []);
+
+  const handleQualification = (participantId: string, isQualified: boolean) => {
+    const allRegistrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    const updatedRegistrations = allRegistrations.map((p: any) =>
+      p.id === participantId
+        ? { ...p, qualification: isQualified ? "qualified" : "disqualified" }
+        : p
     );
+
+    localStorage.setItem('registrations', JSON.stringify(updatedRegistrations));
+    
+    const approvedRegistrations = updatedRegistrations.filter((r: any) => r.status === 'approved');
+    setParticipants(approvedRegistrations);
 
     toast({
       title: `Participant ${isQualified ? "Qualified" : "Disqualified"}`,
@@ -60,15 +50,9 @@ const CoordinatorDashboard = () => {
         isQualified ? "qualified" : "disqualified"
       }.`,
     });
-
-    console.log(
-      `Participant ${participantId} marked as ${
-        isQualified ? "qualified" : "disqualified"
-      }`
-    );
   };
 
-  const filteredParticipants = participants.filter((p) => {
+  const filteredParticipants = participants.filter((p: any) => {
     if (filter === "all") return true;
     return p.eventType === filter;
   });
@@ -108,39 +92,34 @@ const CoordinatorDashboard = () => {
               <TableHead>Name</TableHead>
               <TableHead>Event Type</TableHead>
               <TableHead>School</TableHead>
-              <TableHead>Status</TableHead>
               <TableHead>Qualification</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredParticipants.map((participant) => (
+            {filteredParticipants.map((participant: any) => (
               <TableRow key={participant.id}>
                 <TableCell>{participant.name}</TableCell>
                 <TableCell className="capitalize">{participant.eventType}</TableCell>
                 <TableCell>{participant.school}</TableCell>
-                <TableCell className="capitalize">{participant.status}</TableCell>
-                <TableCell className="capitalize">
-                  {participant.qualification}
-                </TableCell>
+                <TableCell className="capitalize">{participant.qualification}</TableCell>
                 <TableCell className="space-x-2">
-                  {participant.status === "approved" &&
-                    participant.qualification === "pending" && (
-                      <>
-                        <Button
-                          onClick={() => handleQualification(participant.id, true)}
-                          className="bg-green-500 hover:bg-green-600"
-                        >
-                          Qualify
-                        </Button>
-                        <Button
-                          onClick={() => handleQualification(participant.id, false)}
-                          variant="destructive"
-                        >
-                          Disqualify
-                        </Button>
-                      </>
-                    )}
+                  {participant.qualification === "pending" && (
+                    <>
+                      <Button
+                        onClick={() => handleQualification(participant.id, true)}
+                        className="bg-green-500 hover:bg-green-600"
+                      >
+                        Qualify
+                      </Button>
+                      <Button
+                        onClick={() => handleQualification(participant.id, false)}
+                        variant="destructive"
+                      >
+                        Disqualify
+                      </Button>
+                    </>
+                  )}
                 </TableCell>
               </TableRow>
             ))}

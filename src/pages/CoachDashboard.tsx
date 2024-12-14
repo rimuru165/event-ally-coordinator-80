@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { ArrowLeft } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -12,37 +12,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 
-// Mock data - replace with actual data from your backend
-const mockParticipants = [
-  {
-    id: 1,
-    name: "John Doe",
-    eventType: "sports",
-    school: "Sample School",
-    status: "pending",
-  },
-  {
-    id: 2,
-    name: "Jane Smith",
-    eventType: "cultural",
-    school: "Another School",
-    status: "pending",
-  },
-];
-
 const CoachDashboard = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
-  const [participants, setParticipants] = useState(mockParticipants);
+  const [participants, setParticipants] = useState([]);
 
-  const handleApproval = (participantId: number, isApproved: boolean) => {
-    setParticipants(
-      participants.map((p) =>
-        p.id === participantId
-          ? { ...p, status: isApproved ? "approved" : "rejected" }
-          : p
-      )
+  useEffect(() => {
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    setParticipants(registrations);
+  }, []);
+
+  const handleApproval = (participantId: string, isApproved: boolean) => {
+    const updatedParticipants = participants.map((p: any) =>
+      p.id === participantId
+        ? { ...p, status: isApproved ? "approved" : "rejected" }
+        : p
     );
+
+    localStorage.setItem('registrations', JSON.stringify(updatedParticipants));
+    setParticipants(updatedParticipants);
 
     toast({
       title: `Registration ${isApproved ? "Approved" : "Rejected"}`,
@@ -50,10 +38,6 @@ const CoachDashboard = () => {
         isApproved ? "approved" : "rejected"
       }.`,
     });
-
-    console.log(
-      `Participant ${participantId} ${isApproved ? "approved" : "rejected"}`
-    );
   };
 
   return (
@@ -82,7 +66,7 @@ const CoachDashboard = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            {participants.map((participant) => (
+            {participants.map((participant: any) => (
               <TableRow key={participant.id}>
                 <TableCell>{participant.name}</TableCell>
                 <TableCell className="capitalize">{participant.eventType}</TableCell>

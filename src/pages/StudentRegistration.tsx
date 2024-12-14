@@ -3,13 +3,12 @@ import { useForm } from "react-hook-form";
 import * as z from "zod";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import PersonalInfoFields from "@/components/forms/PersonalInfoFields";
 import AcademicInfoFields from "@/components/forms/AcademicInfoFields";
 import EventInfoFields from "@/components/forms/EventInfoFields";
-import { isAdmin } from "@/lib/adminUtils";
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -46,21 +45,26 @@ const StudentRegistration = () => {
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    console.log("Form submitted:", values);
+    // Get existing registrations or initialize empty array
+    const existingRegistrations = JSON.parse(localStorage.getItem('registrations') || '[]');
     
-    // For testing purposes, we'll check if this is an admin submission
-    if (isAdmin(values.name, values.course)) {
-      console.log("Admin test submission detected!");
-      toast({
-        title: "Admin Test Submission",
-        description: "Admin test registration has been logged.",
-      });
-    } else {
-      toast({
-        title: "Registration Submitted",
-        description: "Your registration has been submitted for review.",
-      });
-    }
+    // Add new registration with pending status
+    const newRegistration = {
+      ...values,
+      id: Date.now().toString(),
+      status: 'pending',
+      qualification: 'pending'
+    };
+    
+    // Save updated registrations
+    localStorage.setItem('registrations', JSON.stringify([...existingRegistrations, newRegistration]));
+
+    toast({
+      title: "Registration Submitted",
+      description: "Your registration has been submitted for review.",
+    });
+
+    navigate('/');
   };
 
   return (

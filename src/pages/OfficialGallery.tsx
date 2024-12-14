@@ -1,60 +1,35 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, Filter, Printer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useToast } from "@/components/ui/use-toast";
-
-interface Participant {
-  id: string;
-  name: string;
-  eventType: "sports" | "cultural" | "academic";
-  school: string;
-  status: "approved" | "pending" | "rejected";
-  photoUrl: string;
-}
-
-// Mock data - replace with actual API call later
-const mockParticipants: Participant[] = [
-  {
-    id: "1",
-    name: "John Doe",
-    eventType: "sports",
-    school: "Engineering",
-    status: "approved",
-    photoUrl: "/placeholder.svg"
-  },
-  {
-    id: "2",
-    name: "Jane Smith",
-    eventType: "cultural",
-    school: "Arts",
-    status: "approved",
-    photoUrl: "/placeholder.svg"
-  },
-  {
-    id: "3",
-    name: "Bob Johnson",
-    eventType: "academic",
-    school: "Science",
-    status: "approved",
-    photoUrl: "/placeholder.svg"
-  }
-];
+import { useToast } from "@/hooks/use-toast";
 
 const OfficialGallery = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [eventTypeFilter, setEventTypeFilter] = useState<string>("all");
   const [schoolFilter, setSchoolFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("approved");
+  const [participants, setParticipants] = useState([]);
+  const [schools, setSchools] = useState<string[]>([]);
 
-  const filteredParticipants = mockParticipants.filter(participant => {
+  useEffect(() => {
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    const qualifiedParticipants = registrations.filter(
+      (r: any) => r.status === 'approved' && r.qualification === 'qualified'
+    );
+    setParticipants(qualifiedParticipants);
+
+    // Get unique schools
+    const uniqueSchools = Array.from(new Set(qualifiedParticipants.map((p: any) => p.school)));
+    setSchools(uniqueSchools);
+  }, []);
+
+  const filteredParticipants = participants.filter((participant: any) => {
     return (
       (eventTypeFilter === "all" || participant.eventType === eventTypeFilter) &&
-      (schoolFilter === "all" || participant.school === schoolFilter) &&
-      (statusFilter === "all" || participant.status === statusFilter)
+      (schoolFilter === "all" || participant.school === schoolFilter)
     );
   });
 
@@ -113,41 +88,25 @@ const OfficialGallery = () => {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">All Schools</SelectItem>
-              <SelectItem value="Engineering">Engineering</SelectItem>
-              <SelectItem value="Arts">Arts</SelectItem>
-              <SelectItem value="Science">Science</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select onValueChange={setStatusFilter} defaultValue="approved">
-            <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="Status" />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Status</SelectItem>
-              <SelectItem value="approved">Approved</SelectItem>
-              <SelectItem value="pending">Pending</SelectItem>
-              <SelectItem value="rejected">Rejected</SelectItem>
+              {schools.map((school) => (
+                <SelectItem key={school} value={school}>{school}</SelectItem>
+              ))}
             </SelectContent>
           </Select>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredParticipants.map((participant) => (
+          {filteredParticipants.map((participant: any) => (
             <Card key={participant.id} className="overflow-hidden">
-              <CardHeader className={`bg-event-${participant.eventType}`}>
-                <CardTitle className="text-white">{participant.name}</CardTitle>
+              <CardHeader>
+                <CardTitle>{participant.name}</CardTitle>
               </CardHeader>
               <CardContent className="p-4 space-y-2">
-                <img
-                  src={participant.photoUrl}
-                  alt={participant.name}
-                  className="w-full h-48 object-cover rounded-md"
-                />
                 <div className="space-y-1">
                   <p><span className="font-medium">School:</span> {participant.school}</p>
                   <p><span className="font-medium">Event Type:</span> {participant.eventType}</p>
-                  <p><span className="font-medium">Status:</span> {participant.status}</p>
+                  <p><span className="font-medium">Course:</span> {participant.course}</p>
+                  <p><span className="font-medium">Year Level:</span> {participant.year}</p>
                 </div>
               </CardContent>
             </Card>
@@ -156,7 +115,7 @@ const OfficialGallery = () => {
 
         {filteredParticipants.length === 0 && (
           <div className="text-center py-12">
-            <p className="text-muted-foreground">No participants found matching the selected filters.</p>
+            <p className="text-muted-foreground">No qualified participants found matching the selected filters.</p>
           </div>
         )}
       </div>
