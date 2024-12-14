@@ -6,27 +6,38 @@ import { ArrowLeft, Filter, Printer } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 
+interface Registration {
+  id: string;
+  name: string;
+  school: string;
+  eventType: string;
+  course: string;
+  year: string;
+  status: string;
+  qualification: string;
+}
+
 const OfficialGallery = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [eventTypeFilter, setEventTypeFilter] = useState<string>("all");
   const [schoolFilter, setSchoolFilter] = useState<string>("all");
-  const [participants, setParticipants] = useState([]);
+  const [participants, setParticipants] = useState<Registration[]>([]);
   const [schools, setSchools] = useState<string[]>([]);
 
   useEffect(() => {
-    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]') as Registration[];
     const qualifiedParticipants = registrations.filter(
-      (r: any) => r.status === 'approved' && r.qualification === 'qualified'
+      (r) => r.status === 'approved' && r.qualification === 'qualified'
     );
     setParticipants(qualifiedParticipants);
 
-    // Get unique schools
-    const uniqueSchools = Array.from(new Set(qualifiedParticipants.map((p: any) => p.school)));
+    // Get unique schools with proper typing
+    const uniqueSchools = Array.from(new Set(qualifiedParticipants.map(p => p.school)));
     setSchools(uniqueSchools);
   }, []);
 
-  const filteredParticipants = participants.filter((participant: any) => {
+  const filteredParticipants = participants.filter((participant) => {
     return (
       (eventTypeFilter === "all" || participant.eventType === eventTypeFilter) &&
       (schoolFilter === "all" || participant.school === schoolFilter)
@@ -96,7 +107,7 @@ const OfficialGallery = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredParticipants.map((participant: any) => (
+          {filteredParticipants.map((participant) => (
             <Card key={participant.id} className="overflow-hidden">
               <CardHeader>
                 <CardTitle>{participant.name}</CardTitle>
