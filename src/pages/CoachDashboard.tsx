@@ -41,49 +41,50 @@ const CoachDashboard = () => {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 min-h-screen bg-gradient-to-br from-background via-background/95 to-background">
       <div className="flex items-center gap-4 mb-8">
         <Button
           variant="ghost"
           onClick={() => navigate("/")}
-          className="flex items-center gap-2"
+          className="flex items-center gap-2 text-white hover:text-neon-cyan transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Role Selection
         </Button>
-        <h1 className="text-3xl font-bold">Coach Dashboard</h1>
+        <h1 className="text-3xl font-bold neon-text">Coach Dashboard</h1>
       </div>
 
-      <div className="bg-white rounded-lg shadow">
+      <div className="glass-card rounded-lg shadow-lg">
         <Table>
           <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead>Event Type</TableHead>
-              <TableHead>School</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Actions</TableHead>
+            <TableRow className="border-b border-white/10">
+              <TableHead className="text-white/90">Name</TableHead>
+              <TableHead className="text-white/90">Event Type</TableHead>
+              <TableHead className="text-white/90">School</TableHead>
+              <TableHead className="text-white/90">Status</TableHead>
+              <TableHead className="text-white/90">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {participants.map((participant: any) => (
-              <TableRow key={participant.id}>
-                <TableCell>{participant.name}</TableCell>
-                <TableCell className="capitalize">{participant.eventType}</TableCell>
-                <TableCell>{participant.school}</TableCell>
-                <TableCell className="capitalize">{participant.status}</TableCell>
+              <TableRow key={participant.id} className="border-b border-white/5">
+                <TableCell className="font-medium text-white/90">{participant.name}</TableCell>
+                <TableCell className="capitalize text-white/90">{participant.eventType}</TableCell>
+                <TableCell className="text-white/90">{participant.school}</TableCell>
+                <TableCell className="capitalize text-white/90">{participant.status}</TableCell>
                 <TableCell className="space-x-2">
                   {participant.status === "pending" && (
                     <>
                       <Button
                         onClick={() => handleApproval(participant.id, true)}
-                        className="bg-green-500 hover:bg-green-600"
+                        className="bg-gradient-to-r from-neon-blue to-neon-cyan hover:from-neon-cyan hover:to-neon-blue text-white shadow-lg"
                       >
                         Approve
                       </Button>
                       <Button
                         onClick={() => handleApproval(participant.id, false)}
                         variant="destructive"
+                        className="shadow-lg"
                       >
                         Reject
                       </Button>
