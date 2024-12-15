@@ -11,7 +11,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { supabase } from "@/integrations/supabase/client";
 
 const CoachDashboard = () => {
   const { toast } = useToast();
@@ -19,107 +18,73 @@ const CoachDashboard = () => {
   const [participants, setParticipants] = useState([]);
 
   useEffect(() => {
-    fetchParticipants();
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    setParticipants(registrations);
   }, []);
 
-  const fetchParticipants = async () => {
-    const { data, error } = await supabase
-      .from('participants')
-      .select('*');
-    
-    if (error) {
-      toast({
-        title: "Error fetching participants",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
+  const handleApproval = (participantId: string, isApproved: boolean) => {
+    const updatedParticipants = participants.map((p: any) =>
+      p.id === participantId
+        ? { ...p, status: isApproved ? "approved" : "rejected" }
+        : p
+    );
 
-    setParticipants(data || []);
-  };
+    localStorage.setItem('registrations', JSON.stringify(updatedParticipants));
+    setParticipants(updatedParticipants);
 
-  const handleApproval = async (participantId, isApproved) => {
-    const { error } = await supabase
-      .from('participants')
-      .update({ status: isApproved ? 'approved' : 'rejected' })
-      .eq('id', participantId);
-
-    if (error) {
-      toast({
-        title: "Error updating status",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    await fetchParticipants();
-    
     toast({
       title: `Registration ${isApproved ? "Approved" : "Rejected"}`,
-      description: `The participant has been ${isApproved ? "approved" : "rejected"}.`,
+      description: `The participant has been ${
+        isApproved ? "approved" : "rejected"
+      }.`,
     });
   };
 
   return (
-    <div className="container mx-auto p-6 min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="container mx-auto p-6 min-h-screen bg-gradient-to-br from-background via-background/95 to-background">
       <div className="flex items-center gap-4 mb-8">
         <Button
           variant="ghost"
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-white hover:text-cyan-300 transition-colors"
+          className="flex items-center gap-2 text-white hover:text-neon-cyan transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Role Selection
         </Button>
-        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300 tracking-wide">
-          Coach Dashboard
-        </h1>
+        <h1 className="text-3xl font-bold neon-text">Coach Dashboard</h1>
       </div>
 
-      <div className="glass-card rounded-lg shadow-lg overflow-hidden border border-cyan-900/30">
+      <div className="glass-card rounded-lg shadow-lg">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-cyan-900/20 bg-white/5 backdrop-blur-sm">
-              <TableHead className="text-cyan-100 font-semibold tracking-wide">Name</TableHead>
-              <TableHead className="text-cyan-100 font-semibold tracking-wide">Event Type</TableHead>
-              <TableHead className="text-cyan-100 font-semibold tracking-wide">School</TableHead>
-              <TableHead className="text-cyan-100 font-semibold tracking-wide">Status</TableHead>
-              <TableHead className="text-cyan-100 font-semibold tracking-wide">Actions</TableHead>
+            <TableRow className="border-b border-white/10">
+              <TableHead className="text-white/90">Name</TableHead>
+              <TableHead className="text-white/90">Event Type</TableHead>
+              <TableHead className="text-white/90">School</TableHead>
+              <TableHead className="text-white/90">Status</TableHead>
+              <TableHead className="text-white/90">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {participants.map((participant) => (
-              <TableRow 
-                key={participant.id} 
-                className="border-b border-cyan-900/10 hover:bg-white/5 transition-colors backdrop-blur-sm"
-              >
-                <TableCell className="font-medium text-white tracking-wide">
-                  {participant.name}
-                </TableCell>
-                <TableCell className="capitalize text-white tracking-wide">
-                  {participant.event_type}
-                </TableCell>
-                <TableCell className="text-white tracking-wide">
-                  {participant.school}
-                </TableCell>
-                <TableCell className="capitalize text-white tracking-wide">
-                  {participant.status || 'pending'}
-                </TableCell>
+            {participants.map((participant: any) => (
+              <TableRow key={participant.id} className="border-b border-white/5">
+                <TableCell className="font-medium text-white/90">{participant.name}</TableCell>
+                <TableCell className="capitalize text-white/90">{participant.eventType}</TableCell>
+                <TableCell className="text-white/90">{participant.school}</TableCell>
+                <TableCell className="capitalize text-white/90">{participant.status}</TableCell>
                 <TableCell className="space-x-2">
-                  {(!participant.status || participant.status === 'pending') && (
+                  {participant.status === "pending" && (
                     <>
                       <Button
                         onClick={() => handleApproval(participant.id, true)}
-                        className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg hover:shadow-cyan-500/20 transition-all duration-300"
+                        className="bg-gradient-to-r from-neon-blue to-neon-cyan hover:from-neon-cyan hover:to-neon-blue text-white shadow-lg"
                       >
                         Approve
                       </Button>
                       <Button
                         onClick={() => handleApproval(participant.id, false)}
                         variant="destructive"
-                        className="shadow-lg hover:shadow-red-500/20 transition-all duration-300"
+                        className="shadow-lg"
                       >
                         Reject
                       </Button>

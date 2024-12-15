@@ -18,7 +18,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { supabase } from "@/integrations/supabase/client";
 
 const CoordinatorDashboard = () => {
   const { toast } = useToast();
@@ -27,112 +26,94 @@ const CoordinatorDashboard = () => {
   const [filter, setFilter] = useState("all");
 
   useEffect(() => {
-    fetchParticipants();
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    const approvedRegistrations = registrations.filter((r: any) => r.status === 'approved');
+    setParticipants(approvedRegistrations);
   }, []);
 
-  const fetchParticipants = async () => {
-    const { data, error } = await supabase
-      .from('participants')
-      .select('*')
-      .eq('status', 'approved');
+  const handleQualification = (participantId: string, isQualified: boolean) => {
+    const allRegistrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    const updatedRegistrations = allRegistrations.map((p: any) =>
+      p.id === participantId
+        ? { ...p, qualification: isQualified ? "qualified" : "disqualified" }
+        : p
+    );
+
+    localStorage.setItem('registrations', JSON.stringify(updatedRegistrations));
     
-    if (error) {
-      toast({
-        title: "Error fetching participants",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
+    const approvedRegistrations = updatedRegistrations.filter((r: any) => r.status === 'approved');
+    setParticipants(approvedRegistrations);
 
-    setParticipants(data || []);
-  };
-
-  const handleQualification = async (participantId, isQualified) => {
-    const { error } = await supabase
-      .from('participants')
-      .update({ qualification: isQualified ? 'qualified' : 'disqualified' })
-      .eq('id', participantId);
-
-    if (error) {
-      toast({
-        title: "Error updating qualification",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    await fetchParticipants();
-    
     toast({
       title: `Participant ${isQualified ? "Qualified" : "Disqualified"}`,
-      description: `The participant has been marked as ${isQualified ? "qualified" : "disqualified"}.`,
+      description: `The participant has been marked as ${
+        isQualified ? "qualified" : "disqualified"
+      }.`,
     });
   };
 
-  const filteredParticipants = participants.filter((p) => {
+  const filteredParticipants = participants.filter((p: any) => {
     if (filter === "all") return true;
-    return p.event_type === filter;
+    return p.eventType === filter;
   });
 
   return (
-    <div className="container mx-auto p-6 min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
+    <div className="container mx-auto p-6 min-h-screen bg-gradient-to-br from-background via-background/95 to-background">
       <div className="flex items-center gap-4 mb-8">
         <Button
           variant="ghost"
           onClick={() => navigate("/")}
-          className="flex items-center gap-2 text-white hover:text-cyan-300 transition-colors"
+          className="flex items-center gap-2 text-white hover:text-neon-cyan transition-colors"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to Role Selection
         </Button>
-        <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300 tracking-wide">
+        <h1 className="text-3xl font-bold neon-text bg-gradient-to-r from-neon-blue to-neon-cyan bg-clip-text">
           Coordinator Dashboard
         </h1>
       </div>
 
       <div className="mb-6">
         <Select onValueChange={setFilter} defaultValue={filter}>
-          <SelectTrigger className="w-[180px] bg-white/5 backdrop-blur-sm border-cyan-900/30 text-white">
+          <SelectTrigger className="w-[180px] bg-card/30 backdrop-blur-sm border-neon-cyan/30 text-white">
             <SelectValue placeholder="Filter by event type" />
           </SelectTrigger>
-          <SelectContent className="bg-gray-800/90 backdrop-blur-md border-cyan-900/30">
-            <SelectItem value="all" className="text-white hover:bg-cyan-500/20">All Events</SelectItem>
-            <SelectItem value="sports" className="text-white hover:bg-cyan-500/20">Sports</SelectItem>
-            <SelectItem value="cultural" className="text-white hover:bg-cyan-500/20">Cultural</SelectItem>
-            <SelectItem value="academic" className="text-white hover:bg-cyan-500/20">Academic</SelectItem>
+          <SelectContent className="bg-card/80 backdrop-blur-md border-neon-cyan/30">
+            <SelectItem value="all" className="text-white hover:bg-neon-blue/20">All Events</SelectItem>
+            <SelectItem value="sports" className="text-white hover:bg-neon-blue/20">Sports</SelectItem>
+            <SelectItem value="cultural" className="text-white hover:bg-neon-blue/20">Cultural</SelectItem>
+            <SelectItem value="academic" className="text-white hover:bg-neon-blue/20">Academic</SelectItem>
           </SelectContent>
         </Select>
       </div>
 
-      <div className="glass-card rounded-lg shadow-lg overflow-hidden border border-cyan-900/30">
+      <div className="glass-card rounded-lg shadow-lg overflow-hidden border border-neon-cyan/30">
         <Table>
           <TableHeader>
-            <TableRow className="border-b border-cyan-900/20 bg-white/5 backdrop-blur-sm">
-              <TableHead className="text-cyan-100 font-semibold tracking-wide">Name</TableHead>
-              <TableHead className="text-cyan-100 font-semibold tracking-wide">Event Type</TableHead>
-              <TableHead className="text-cyan-100 font-semibold tracking-wide">School</TableHead>
-              <TableHead className="text-cyan-100 font-semibold tracking-wide">Qualification</TableHead>
-              <TableHead className="text-cyan-100 font-semibold tracking-wide">Actions</TableHead>
+            <TableRow className="border-b border-neon-cyan/20 bg-card/40">
+              <TableHead className="text-white font-semibold tracking-wide">Name</TableHead>
+              <TableHead className="text-white font-semibold tracking-wide">Event Type</TableHead>
+              <TableHead className="text-white font-semibold tracking-wide">School</TableHead>
+              <TableHead className="text-white font-semibold tracking-wide">Qualification</TableHead>
+              <TableHead className="text-white font-semibold tracking-wide">Actions</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {filteredParticipants.map((participant) => (
+            {filteredParticipants.map((participant: any) => (
               <TableRow 
                 key={participant.id} 
-                className="border-b border-cyan-900/10 hover:bg-white/5 transition-colors backdrop-blur-sm"
+                className="border-b border-neon-cyan/10 hover:bg-neon-blue/5 transition-colors"
               >
-                <TableCell className="font-medium text-white tracking-wide">
+                <TableCell className="font-medium text-white/90 tracking-wide">
                   {participant.name}
                 </TableCell>
-                <TableCell className="capitalize text-white tracking-wide">
-                  {participant.event_type}
+                <TableCell className="capitalize text-white/90 tracking-wide">
+                  {participant.eventType}
                 </TableCell>
-                <TableCell className="text-white tracking-wide">
+                <TableCell className="text-white/90 tracking-wide">
                   {participant.school}
                 </TableCell>
-                <TableCell className="capitalize text-white tracking-wide">
+                <TableCell className="capitalize text-white/90 tracking-wide">
                   {participant.qualification || "pending"}
                 </TableCell>
                 <TableCell className="space-x-2">
@@ -140,14 +121,14 @@ const CoordinatorDashboard = () => {
                     <>
                       <Button
                         onClick={() => handleQualification(participant.id, true)}
-                        className="bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg hover:shadow-cyan-500/20 transition-all duration-300"
+                        className="bg-gradient-to-r from-neon-blue to-neon-cyan hover:from-neon-cyan hover:to-neon-blue text-white shadow-lg hover:shadow-neon-cyan/50 transition-all duration-300"
                       >
                         Qualify
                       </Button>
                       <Button
                         onClick={() => handleQualification(participant.id, false)}
                         variant="destructive"
-                        className="shadow-lg hover:shadow-red-500/20 transition-all duration-300"
+                        className="shadow-lg hover:shadow-destructive/50 transition-all duration-300"
                       >
                         Disqualify
                       </Button>

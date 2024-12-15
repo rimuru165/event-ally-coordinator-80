@@ -2,14 +2,12 @@ import { useState, useEffect } from "react";
 import { GalleryHeader } from "@/components/gallery/GalleryHeader";
 import { GalleryFilters } from "@/components/gallery/GalleryFilters";
 import { ParticipantCard } from "@/components/gallery/ParticipantCard";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/hooks/use-toast";
 
-interface Participant {
+interface Registration {
   id: string;
   name: string;
   school: string;
-  event_type: string;
+  eventType: string;
   course: string;
   year: string;
   status: string;
@@ -19,38 +17,23 @@ interface Participant {
 const OfficialGallery = () => {
   const [eventTypeFilter, setEventTypeFilter] = useState<string>("all");
   const [schoolFilter, setSchoolFilter] = useState<string>("all");
-  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [participants, setParticipants] = useState<Registration[]>([]);
   const [schools, setSchools] = useState<string[]>([]);
-  const { toast } = useToast();
 
   useEffect(() => {
-    fetchParticipants();
-  }, []);
+    const registrations = JSON.parse(localStorage.getItem('registrations') || '[]') as Registration[];
+    const qualifiedParticipants = registrations.filter(
+      (r) => r.status === 'approved' && r.qualification === 'qualified'
+    );
+    setParticipants(qualifiedParticipants);
 
-  const fetchParticipants = async () => {
-    const { data, error } = await supabase
-      .from('participants')
-      .select('*')
-      .eq('status', 'approved')
-      .eq('qualification', 'qualified');
-    
-    if (error) {
-      toast({
-        title: "Error fetching participants",
-        description: error.message,
-        variant: "destructive",
-      });
-      return;
-    }
-
-    setParticipants(data || []);
-    const uniqueSchools = Array.from(new Set((data || []).map(p => p.school)));
+    const uniqueSchools = Array.from(new Set(qualifiedParticipants.map(p => p.school)));
     setSchools(uniqueSchools);
-  };
+  }, []);
 
   const filteredParticipants = participants.filter((participant) => {
     return (
-      (eventTypeFilter === "all" || participant.event_type === eventTypeFilter) &&
+      (eventTypeFilter === "all" || participant.eventType === eventTypeFilter) &&
       (schoolFilter === "all" || participant.school === schoolFilter)
     );
   });
@@ -106,7 +89,7 @@ const OfficialGallery = () => {
               <div class="card">
                 <div class="name">${p.name}</div>
                 <p><strong>School:</strong> ${p.school}</p>
-                <p><strong>Event Type:</strong> ${p.event_type}</p>
+                <p><strong>Event Type:</strong> ${p.eventType}</p>
                 <p><strong>Course:</strong> ${p.course}</p>
                 <p><strong>Year Level:</strong> ${p.year}</p>
               </div>
@@ -145,7 +128,7 @@ const OfficialGallery = () => {
                 key={participant.id}
                 name={participant.name}
                 school={participant.school}
-                eventType={participant.event_type}
+                eventType={participant.eventType}
                 course={participant.course}
                 year={participant.year}
               />
