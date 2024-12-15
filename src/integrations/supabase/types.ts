@@ -9,7 +9,92 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      participant_files: {
+        Row: {
+          file_path: string
+          file_type: string
+          id: string
+          participant_id: string | null
+          uploaded_at: string
+        }
+        Insert: {
+          file_path: string
+          file_type: string
+          id?: string
+          participant_id?: string | null
+          uploaded_at?: string
+        }
+        Update: {
+          file_path?: string
+          file_type?: string
+          id?: string
+          participant_id?: string | null
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "participant_files_participant_id_fkey"
+            columns: ["participant_id"]
+            isOneToOne: false
+            referencedRelation: "participants"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      participants: {
+        Row: {
+          academic_load_units: number
+          age: number
+          course: string
+          created_at: string
+          date_of_birth: string
+          event_type: string
+          high_school_grad_year: number
+          id: string
+          name: string
+          nationality: string
+          school: string
+          updated_at: string
+          user_id: string | null
+          year: string
+          years_of_participation: number
+        }
+        Insert: {
+          academic_load_units: number
+          age: number
+          course: string
+          created_at?: string
+          date_of_birth: string
+          event_type: string
+          high_school_grad_year: number
+          id?: string
+          name: string
+          nationality: string
+          school: string
+          updated_at?: string
+          user_id?: string | null
+          year: string
+          years_of_participation: number
+        }
+        Update: {
+          academic_load_units?: number
+          age?: number
+          course?: string
+          created_at?: string
+          date_of_birth?: string
+          event_type?: string
+          high_school_grad_year?: number
+          id?: string
+          name?: string
+          nationality?: string
+          school?: string
+          updated_at?: string
+          user_id?: string | null
+          year?: string
+          years_of_participation?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
