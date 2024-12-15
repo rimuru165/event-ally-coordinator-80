@@ -9,11 +9,6 @@ import { ArrowLeft } from "lucide-react";
 import PersonalInfoFields from "@/components/forms/PersonalInfoFields";
 import AcademicInfoFields from "@/components/forms/AcademicInfoFields";
 import EventInfoFields from "@/components/forms/EventInfoFields";
-import FileUploadFields from "@/components/forms/FileUploadFields";
-import { supabase } from "@/integrations/supabase/client";
-import { motion } from "framer-motion";
-
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
 
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -27,9 +22,6 @@ const formSchema = z.object({
   highSchoolGradYear: z.number(),
   eventType: z.enum(["sports", "cultural", "academic"]),
   school: z.string(),
-  photo: z.any(),
-  registrarCert: z.any(),
-  psaCopy: z.any(),
 });
 
 const StudentRegistration = () => {
@@ -52,106 +44,31 @@ const StudentRegistration = () => {
     },
   });
 
-  const uploadFile = async (file: File, participantId: string, fileType: string) => {
-    if (!file) return null;
-
-    const fileExt = file.name.split('.').pop();
-    const filePath = `${participantId}/${fileType}.${fileExt}`;
-
-    const { error: uploadError } = await supabase.storage
-      .from('participant_files')
-      .upload(filePath, file);
-
-    if (uploadError) {
-      console.error('Error uploading file:', uploadError);
-      throw new Error(`Error uploading ${fileType}`);
-    }
-
-    const { error: dbError } = await supabase
-      .from('participant_files')
-      .insert({
-        participant_id: participantId,
-        file_type: fileType,
-        file_path: filePath,
-      });
-
-    if (dbError) {
-      console.error('Error saving file metadata:', dbError);
-      throw new Error(`Error saving ${fileType} metadata`);
-    }
-
-    return filePath;
-  };
-
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    try {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
+    // Get existing registrations or initialize empty array
+    const existingRegistrations = JSON.parse(localStorage.getItem('registrations') || '[]');
+    
+    // Add new registration with pending status
+    const newRegistration = {
+      ...values,
+      id: Date.now().toString(),
+      status: 'pending',
+      qualification: 'pending'
+    };
+    
+    // Save updated registrations
+    localStorage.setItem('registrations', JSON.stringify([...existingRegistrations, newRegistration]));
 
-      if (!user) {
-        toast({
-          title: "Error",
-          description: "You must be logged in to register",
-          variant: "destructive",
-        });
-        return;
-      }
+    toast({
+      title: "Registration Submitted",
+      description: "Your registration has been submitted for review.",
+    });
 
-      // Insert participant data
-      const { data: participant, error: participantError } = await supabase
-        .from('participants')
-        .insert({
-          user_id: user.id,
-          name: values.name,
-          date_of_birth: values.dateOfBirth,
-          age: values.age,
-          nationality: values.nationality,
-          year: values.year,
-          course: values.course,
-          academic_load_units: values.academicLoadUnits,
-          years_of_participation: values.yearsOfParticipation,
-          high_school_grad_year: values.highSchoolGradYear,
-          event_type: values.eventType,
-          school: values.school,
-        })
-        .select()
-        .single();
-
-      if (participantError) {
-        throw new Error('Error creating participant profile');
-      }
-
-      // Upload files
-      await Promise.all([
-        uploadFile(values.photo, participant.id, 'photo'),
-        uploadFile(values.registrarCert, participant.id, 'registrar_cert'),
-        uploadFile(values.psaCopy, participant.id, 'psa_copy'),
-      ]);
-
-      toast({
-        title: "Registration Successful",
-        description: "Your registration has been submitted successfully.",
-      });
-
-      navigate('/');
-    } catch (error) {
-      console.error('Registration error:', error);
-      toast({
-        title: "Registration Failed",
-        description: error.message || "An error occurred during registration",
-        variant: "destructive",
-      });
-    }
+    navigate('/');
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      exit={{ opacity: 0, y: -20 }}
-      className="container mx-auto p-6 max-w-2xl"
-    >
+    <div className="container mx-auto p-6 max-w-2xl">
       <div className="flex items-center gap-4 mb-8">
         <Button
           variant="ghost"
@@ -165,38 +82,19 @@ const StudentRegistration = () => {
       </div>
       
       <Form {...form}>
-        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-          <div className="space-y-8 glass-card p-6">
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold neon-text">Personal Information</h2>
-              <PersonalInfoFields form={form} />
-            </div>
-
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold neon-text">Academic Information</h2>
-              <AcademicInfoFields form={form} />
-            </div>
-
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold neon-text">Event Information</h2>
-              <EventInfoFields form={form} />
-            </div>
-
-            <div className="space-y-6">
-              <h2 className="text-xl font-semibold neon-text">Required Documents</h2>
-              <FileUploadFields form={form} />
-            </div>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          <div className="space-y-6">
+            <PersonalInfoFields form={form} />
+            <AcademicInfoFields form={form} />
+            <EventInfoFields form={form} />
           </div>
 
-          <Button 
-            type="submit" 
-            className="w-full bg-gradient-to-r from-neon-blue to-neon-cyan hover:from-neon-cyan hover:to-neon-blue text-white shadow-lg"
-          >
+          <Button type="submit" className="w-full">
             Submit Registration
           </Button>
         </form>
       </Form>
-    </motion.div>
+    </div>
   );
 };
 
