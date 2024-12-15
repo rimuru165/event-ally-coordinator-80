@@ -1,10 +1,7 @@
 import { useState, useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { ArrowLeft, Filter, Printer } from "lucide-react";
-import { useNavigate } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
+import { GalleryHeader } from "@/components/gallery/GalleryHeader";
+import { GalleryFilters } from "@/components/gallery/GalleryFilters";
+import { ParticipantCard } from "@/components/gallery/ParticipantCard";
 
 interface Registration {
   id: string;
@@ -18,8 +15,6 @@ interface Registration {
 }
 
 const OfficialGallery = () => {
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const [eventTypeFilter, setEventTypeFilter] = useState<string>("all");
   const [schoolFilter, setSchoolFilter] = useState<string>("all");
   const [participants, setParticipants] = useState<Registration[]>([]);
@@ -44,16 +39,9 @@ const OfficialGallery = () => {
   });
 
   const handlePrint = () => {
-    toast({
-      title: "Preparing Gallery for Print",
-      description: "The gallery will open in a new window for printing.",
-    });
-
-    // Create a new window for printing
     const printWindow = window.open('', '_blank');
     if (!printWindow) return;
 
-    // Generate print-friendly HTML
     const printContent = `
       <!DOCTYPE html>
       <html>
@@ -119,86 +107,37 @@ const OfficialGallery = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-cyan-900/10 via-blue-900/10 to-cyan-900/10">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       <div className="container mx-auto p-6 space-y-6">
-        <div className="flex justify-between items-center">
-          <Button
-            variant="ghost"
-            className="flex items-center gap-2 text-cyan-700 hover:text-cyan-600 hover:bg-cyan-100/50"
-            onClick={() => navigate("/")}
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Back to Role Selection
-          </Button>
-          <Button
-            onClick={handlePrint}
-            className="flex items-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white shadow-lg shadow-cyan-500/20 transition-all duration-300"
-          >
-            <Printer className="h-4 w-4" />
-            Print Gallery
-          </Button>
-        </div>
+        <GalleryHeader onPrint={handlePrint} />
 
-        <div className="space-y-4">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-cyan-500 to-blue-500 bg-clip-text text-transparent">
+        <div className="space-y-8">
+          <h1 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 to-blue-300 tracking-wide text-center mb-8">
             Official Participant Gallery
           </h1>
           
-          <div className="flex flex-wrap gap-4 print:hidden backdrop-blur-sm bg-white/30 p-4 rounded-lg">
-            <div className="flex items-center gap-2 text-cyan-700">
-              <Filter className="h-4 w-4" />
-              <span className="font-medium">Filters:</span>
-            </div>
-            
-            <Select onValueChange={setEventTypeFilter} defaultValue="all">
-              <SelectTrigger className="w-[180px] border-cyan-200 bg-white/50 backdrop-blur-sm">
-                <SelectValue placeholder="Event Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Events</SelectItem>
-                <SelectItem value="sports">Sports</SelectItem>
-                <SelectItem value="cultural">Cultural</SelectItem>
-                <SelectItem value="academic">Academic</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select onValueChange={setSchoolFilter} defaultValue="all">
-              <SelectTrigger className="w-[180px] border-cyan-200 bg-white/50 backdrop-blur-sm">
-                <SelectValue placeholder="School" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Schools</SelectItem>
-                {schools.map((school) => (
-                  <SelectItem key={school} value={school}>{school}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
+          <GalleryFilters
+            schools={schools}
+            onEventTypeChange={setEventTypeFilter}
+            onSchoolChange={setSchoolFilter}
+          />
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredParticipants.map((participant) => (
-              <Card 
-                key={participant.id} 
-                className="overflow-hidden border-cyan-200 bg-white/40 backdrop-blur-sm hover:bg-white/50 transition-all duration-300 shadow-lg shadow-cyan-500/10"
-              >
-                <CardHeader>
-                  <CardTitle className="text-cyan-900">{participant.name}</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 space-y-2">
-                  <div className="space-y-1 text-cyan-800">
-                    <p><span className="font-medium">School:</span> {participant.school}</p>
-                    <p><span className="font-medium">Event Type:</span> {participant.eventType}</p>
-                    <p><span className="font-medium">Course:</span> {participant.course}</p>
-                    <p><span className="font-medium">Year Level:</span> {participant.year}</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <ParticipantCard
+                key={participant.id}
+                name={participant.name}
+                school={participant.school}
+                eventType={participant.eventType}
+                course={participant.course}
+                year={participant.year}
+              />
             ))}
           </div>
 
           {filteredParticipants.length === 0 && (
             <div className="text-center py-12">
-              <p className="text-cyan-700">No qualified participants found matching the selected filters.</p>
+              <p className="text-cyan-300 text-lg">No qualified participants found matching the selected filters.</p>
             </div>
           )}
         </div>
